@@ -46,7 +46,7 @@ def available_accounts(config_path: str | Path) -> list[dict]:
         keys = get_account_keys_from_store(account)
         if keys.get('db_key'):
             found[account] = {'account': account, 'source': source, 'key': keys['db_key'],
-                'xor': keys.get('image_xor_key'), 'aes': keys.get('image_aes_key')}
+                'xor': keys.get('image_xor_key'), 'xor_format': 'hex', 'aes': keys.get('image_aes_key')}
     return list(found.values())
 
 def capture_linux_key(account: str, config_path: str | Path) -> dict:
@@ -163,7 +163,9 @@ def sync_account(item: dict, *, force: bool = False) -> dict:
     if item.get('aes') and item.get('xor') is not None:
         xor = item['xor']
         if not isinstance(xor, int):
-            xor = int(str(xor), 16)
+            value = str(xor).strip()
+            # WeFlow stores decimal bytes; this application's store uses hex.
+            xor = int(value, 16 if item.get('xor_format') == 'hex' or value.lower().startswith('0x') or not value.isdecimal() else 10)
         templates = scan_v2_templates(source.parent)
         aes = str(item['aes'])[:16]
         if verify_key_pair(xor, aes, templates):

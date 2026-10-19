@@ -2,6 +2,7 @@
 
 import mimetypes
 import os
+import sys
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -267,6 +268,8 @@ _maybe_mount_frontend()
 
 @app.on_event("startup")
 async def _startup_native_core() -> None:
+    if sys.platform.startswith('linux'):
+        return
     from .native_core_client import configure_native_core_entrypoint
 
     configure_native_core_entrypoint()
@@ -275,6 +278,10 @@ async def _startup_native_core() -> None:
 
 @app.on_event("startup")
 async def _startup_background_jobs() -> None:
+    if sys.platform.startswith('linux'):
+        # Linux publishes authenticated Python snapshots; proprietary native
+        # capture/realtime binaries have no Linux distribution.
+        return
     try:
         WCDB_REALTIME.start_background_prime()
     except Exception:

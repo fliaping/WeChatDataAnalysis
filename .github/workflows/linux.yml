@@ -9,7 +9,7 @@ jobs:
         with:
           python-version: '3.13'
       - run: pip install -r requirements-linux.txt pytest
-      - run: PYTHONPATH=src pytest -q tests/test_linux_support.py tests/test_wechat_decrypt_key_modes.py tests/test_image_key_memory_scan.py tests/test_image_key_resolver.py tests/test_image_key_verified_store.py
+      - run: PYTHONPATH=src pytest -q tests/test_linux_support.py tests/test_linux_startup.py tests/test_wechat_decrypt_key_modes.py tests/test_image_key_memory_scan.py tests/test_image_key_resolver.py tests/test_image_key_verified_store.py
       - uses: actions/setup-node@v4
         with:
           node-version: '24'

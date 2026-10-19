@@ -65,3 +65,18 @@ def test_verified_store_works_without_weflow(tmp_path, monkeypatch):
     items = linux.available_accounts(tmp_path / 'absent.json')
     assert len(items) == 1 and items[0]['account'] == 'local'
     assert items[0]['key'] == 'c'*64
+
+@pytest.mark.parametrize('xor_value,fmt', [('166', None), ('a6', 'hex')])
+def test_sync_verifies_decimal_weflow_and_hex_store_image_keys(tmp_path, monkeypatch, xor_value, fmt):
+    source = tmp_path / 'account/db_storage'; source.mkdir(parents=True)
+    image_dir = source.parent / 'msg/attach/chat/2026-10/Img'; image_dir.mkdir(parents=True)
+    image = b'\xff\xd8\xff' + b'image fixture' * 40 + b'\xff\xd9'
+    aes = AES.new(b'0123456789abcdef', AES.MODE_ECB).encrypt(pad(image[:100], 16))
+    dat = struct.pack('<6sLLx', b'\x07\x08V2\x08\x07', 100, 20) + aes + image[100:-20] + bytes(v ^ 166 for v in image[-20:])
+    (image_dir / 'fixture_t.dat').write_bytes(dat)
+    monkeypatch.setattr(linux, 'get_output_databases_dir', lambda: tmp_path / 'output')
+    saved = []
+    monkeypatch.setattr(linux, 'upsert_account_keys_in_store', lambda *a, **kw: saved.append(kw))
+    result = linux.sync_account({'account':'account','source':source,'key':'c'*64,'xor':xor_value,'xor_format':fmt,'aes':'0123456789abcdef'})
+    assert result['image_key_verified'] is True
+    assert saved[-1]['image_xor_key'] == 'a6'
