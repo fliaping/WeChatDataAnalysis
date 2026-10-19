@@ -12,7 +12,7 @@ const bootstrapScript = createFirstUseBootstrapScript({
   countdownMilliseconds: 20_000,
 })
 
-const createHarness = ({ pathname = '/', search = '', hash = '', stored = null } = {}) => {
+const createHarness = ({ pathname = '/', search = '', hash = '', stored = null, baseURL = '/' } = {}) => {
   let now = 0
   let intervalCallback = null
   let clickCallback = null
@@ -101,7 +101,7 @@ const createHarness = ({ pathname = '/', search = '', hash = '', stored = null }
     },
   }
 
-  vm.runInNewContext(bootstrapScript, {
+  vm.runInNewContext(createFirstUseBootstrapScript({ storageKey: STORAGE_KEY, version: VERSION, baseURL }), {
     Date: FakeDate,
     JSON,
     Math,
@@ -138,6 +138,15 @@ test('unaccepted root redirects before the Nuxt client mounts', () => {
 
   assert.deepEqual(harness.replacements, ['/agreement?redirect=%2F'])
   assert.equal(harness.rootAttributes.has('data-first-use-accepted'), false)
+})
+
+test('subpath notice and return navigation remain inside the application', () => {
+  const entry = createHarness({ pathname: '/analysis/chat', baseURL: '/analysis/' })
+  assert.deepEqual(entry.replacements, ['/analysis/agreement?redirect=%2Fchat'])
+  const notice = createHarness({ pathname: '/analysis/agreement', search: '?redirect=%2Fchat', baseURL: '/analysis/' })
+  assert.deepEqual(notice.replacements, [])
+  notice.advance(20_000); notice.click()
+  assert.deepEqual(notice.replacements, ['/analysis/chat'])
 })
 
 test('accepted state skips the notice and hides the hydration guard', () => {

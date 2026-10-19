@@ -2,10 +2,12 @@ export const createFirstUseBootstrapScript = ({
   storageKey,
   version,
   countdownMilliseconds = 20_000,
+  baseURL = '/',
 } = {}) => {
   const serializedStorageKey = JSON.stringify(String(storageKey || 'ui.first_use_agreement'))
   const serializedVersion = JSON.stringify(String(version || ''))
   const serializedCountdown = JSON.stringify(Math.max(0, Number(countdownMilliseconds) || 0))
+  const serializedBase = JSON.stringify('/' + String(baseURL).split('/').filter(Boolean).join('/'))
 
   return `;(function () {
   'use strict';
@@ -13,7 +15,10 @@ export const createFirstUseBootstrapScript = ({
   var storageKey = ${serializedStorageKey};
   var agreementVersion = ${serializedVersion};
   var countdownMilliseconds = ${serializedCountdown};
+  var base = ${serializedBase};
+  if (base === '/') base = '';
   var pathname = String(window.location.pathname || '/');
+  if (base && (pathname === base || pathname.indexOf(base + '/') === 0)) pathname = pathname.slice(base.length) || '/';
   var isAgreementRoute = /^\\/agreement\\/?$/.test(pathname);
 
   function readAcceptance() {
@@ -26,7 +31,7 @@ export const createFirstUseBootstrapScript = ({
   }
 
   function currentRedirect() {
-    return String(window.location.pathname || '/')
+    return pathname
       + String(window.location.search || '')
       + String(window.location.hash || '');
   }
@@ -42,7 +47,7 @@ export const createFirstUseBootstrapScript = ({
   if (!isAgreementRoute) {
     document.documentElement.removeAttribute('data-first-use-route');
     if (!readAcceptance()) {
-      var agreementUrl = '/agreement?redirect=' + encodeURIComponent(currentRedirect());
+      var agreementUrl = base + '/agreement?redirect=' + encodeURIComponent(currentRedirect());
       window.location.replace(agreementUrl);
       return;
     }
@@ -116,7 +121,7 @@ export const createFirstUseBootstrapScript = ({
       } catch (_error) {}
       document.documentElement.removeAttribute('data-first-use-route');
       document.documentElement.setAttribute('data-first-use-accepted', 'true');
-      window.location.replace(redirect);
+      window.location.replace(base + redirect);
     });
 
     updateFallback();

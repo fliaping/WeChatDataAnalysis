@@ -107,7 +107,7 @@ const isAgreementRoute = (path = route.path) => {
 }
 const firstUseRouteResolved = ref(isAgreementRoute())
 const firstUseAgreementHref = computed(() => (
-  `/agreement?redirect=${encodeURIComponent(String(route.fullPath || '/'))}`
+  `${useRuntimeConfig().app.baseURL.replace(/\/$/, '')}/agreement?redirect=${encodeURIComponent(String(route.fullPath || '/'))}`
 ))
 let firstUseGuardReady = false
 let firstUseNavigationPending = false

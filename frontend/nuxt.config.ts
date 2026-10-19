@@ -14,6 +14,7 @@ const firstUseBootstrapScript = createFirstUseBootstrapScript({
   storageKey: FIRST_USE_AGREEMENT_STORAGE_KEY,
   version: FIRST_USE_AGREEMENT_VERSION,
   countdownMilliseconds: 20_000,
+  baseURL: process.env.NUXT_APP_BASE_URL || '/',
 })
 
 export default defineNuxtConfig({
