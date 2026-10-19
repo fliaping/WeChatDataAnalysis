@@ -356,7 +356,7 @@ def get_process_list():
 
 
 def _wechat_process_targets() -> set[str]:
-    return {"wechat"} if sys.platform == "darwin" else {"weixin.exe", "wechat.exe"}
+    return {"wechat", "weixin"} if sys.platform in {"darwin", "linux"} else {"weixin.exe", "wechat.exe"}
 
 
 def _is_wechat_dir_candidate_name(name: str) -> bool:
@@ -425,6 +425,12 @@ def _build_auto_detect_scan_paths() -> List[str]:
     add(os.path.join(home_dir, "Documents"))
     add(os.path.join(home_dir, "Desktop"))
     add(os.path.join(home_dir, "Downloads"))
+
+    if sys.platform.startswith('linux'):
+        add(os.path.join(home_dir, 'xwechat_files'))
+        add(os.path.join(home_dir, 'Documents', 'xwechat_files'))
+        add(os.path.join(home_dir, '.local', 'share', 'WeChat', 'xwechat_files'))
+        return scan_paths
 
     if sys.platform == "darwin":
         container_root = Path.home() / "Library" / "Containers" / "com.tencent.xinWeChat" / "Data"

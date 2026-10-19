@@ -68,6 +68,7 @@ export default defineNuxtConfig({
 
   // 应用配置
   app: {
+    baseURL: process.env.NUXT_APP_BASE_URL || '/',
     head: {
       title: '微信数据库解密工具',
       meta: [

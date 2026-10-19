@@ -7,6 +7,7 @@
 
     <main class="relative z-10 mx-auto flex min-h-full w-full max-w-6xl flex-col justify-start lg:justify-center">
       <section class="space-y-5">
+        <LinuxSource />
         <div class="flex flex-col gap-5 rounded-lg border border-[#EDEDED] bg-white/78 p-6 backdrop-blur sm:p-8 lg:flex-row lg:items-center lg:justify-between">
           <div class="flex items-start gap-4 text-left">
             <img src="/logo.png" alt="微信解密助手Logo" class="h-16 w-16 shrink-0 object-contain" />

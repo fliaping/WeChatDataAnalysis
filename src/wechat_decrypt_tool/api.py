@@ -149,6 +149,8 @@ app.include_router(_favorites_router)
 app.include_router(_record_export_router)
 app.include_router(_system_router)
 app.include_router(_cdn_router)
+from .routers.linux import router as _linux_router
+app.include_router(_linux_router)
 
 
 # Python's MIME database inherits Windows registry overrides.  Keep the

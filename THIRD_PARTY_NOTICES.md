@@ -25,3 +25,10 @@ database validation, transaction recovery, signature verification, and
 privacy-preserving diagnostics; it does not bundle user databases or keys.
 The complete upstream license text is included at
 `docs/licenses/wcdb-key-tool-MIT.txt`.
+# Linux key capture
+
+`src/wechat_decrypt_tool/vendor/wcdb_key_tool` contains the MIT-licensed
+TANGandXUE/wcdb-key-tool source, revision 79f1b5b. Its original license is
+included alongside the source. The Linux adapter uses its explicit GDB
+capture entry only; it does not use its decrypt or global debugger cleanup.
+

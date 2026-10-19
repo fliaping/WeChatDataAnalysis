@@ -197,6 +197,39 @@ class _Win32MemoryApi:
         self._close_handle(handle)
 
 
+class _LinuxMemoryApi:
+    """Read-only procfs implementation, with bounded regions and no ptrace attach."""
+    def open_process(self, pid: int):
+        fd = os.open(f'/proc/{int(pid)}/mem', os.O_RDONLY | os.O_CLOEXEC)
+        try:
+            regions = []
+            for line in Path(f'/proc/{int(pid)}/maps').read_text().splitlines():
+                fields = line.split()
+                if not fields[1].startswith('rw'):
+                    continue
+                start, end = (int(x, 16) for x in fields[0].split('-'))
+                while start < end:
+                    size = min(end - start, MAX_MEMORY_REGION_SIZE)
+                    regions.append(MemoryRegion(start, size, MEM_COMMIT, PAGE_READWRITE))
+                    start += size
+            return fd, tuple(regions)
+        except BaseException:
+            os.close(fd)
+            raise
+
+    def query_region(self, handle, address: int):
+        return next((r for r in handle[1] if r.base_address >= address), None)
+
+    def read_memory(self, handle, address: int, size: int) -> bytes:
+        try:
+            return os.pread(handle[0], size, address)
+        except OSError:
+            return b''
+
+    def close_handle(self, handle):
+        os.close(handle[0])
+
+
 def _create_win32_api() -> _Win32MemoryApi | None:
     if sys.platform != "win32":
         return None
@@ -390,7 +423,7 @@ def scan_process_for_image_key(
     if sys.platform == "darwin" and memory_api is None:
         return _scan_macos_process_for_image_key(pid, template_scan, progress, deadline=deadline, clock=clock_fn)
 
-    api = memory_api or _create_win32_api()
+    api = memory_api or (_LinuxMemoryApi() if sys.platform.startswith('linux') else _create_win32_api())
     if api is None:
         return None
 
