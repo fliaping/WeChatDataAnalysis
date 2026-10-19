@@ -57,6 +57,39 @@ def test_linux_capture_rejects_unknown_account_before_debugger(tmp_path):
     with pytest.raises(ValueError, match='Unknown local account'):
         linux.capture_linux_key('not-a-local-account', tmp_path / 'absent.json')
 
+def test_database_capture_fixed_helper_and_validation(tmp_path, monkeypatch):
+    import subprocess
+    source = tmp_path / 'local/db_storage'; source.mkdir(parents=True)
+    monkeypatch.setattr(linux, 'local_sources', lambda _: {'local': source})
+    monkeypatch.setattr(linux.shutil, 'which', lambda _: '/usr/bin/gdb')
+    monkeypatch.setenv('WECHAT_TOOL_CAPTURE_HELPER', '/usr/local/bin/weharbor-capture-key')
+    def run(command, **kwargs):
+        assert command == ['sudo', '-n', '/usr/local/bin/weharbor-capture-key']
+        assert json.loads(kwargs['input']) == {'mode':'database'}
+        assert kwargs['check'] and kwargs['timeout'] == 130
+        return subprocess.CompletedProcess(command, 0, json.dumps({'key':'d'*64}))
+    monkeypatch.setattr(subprocess, 'run', run)
+    def sync(item, **kwargs):
+        assert item['key'] == 'd'*64 and kwargs['force']
+        return {'changed': []}
+    monkeypatch.setattr(linux, 'sync_account', sync)
+    with pytest.raises(ValueError, match='authenticate'):
+        linux.capture_linux_key('local', tmp_path / 'absent.json')
+
+def test_image_capture_fixed_helper_protocol(tmp_path, monkeypatch):
+    import subprocess
+    from wechat_decrypt_tool.image_key_memory_scan import scan_image_key_from_memory
+    monkeypatch.setenv('WECHAT_TOOL_CAPTURE_HELPER', '/usr/local/bin/weharbor-capture-key')
+    def run(command, **kwargs):
+        assert command == ['sudo', '-n', '/usr/local/bin/weharbor-capture-key']
+        assert json.loads(kwargs['input']) == {'mode':'image', 'account_dir':str(tmp_path.resolve())}
+        payload = {'pid':123,'xor_key':166,'aes_key':'0123456789abcdef',
+                   'verified':True,'template_path':str(tmp_path/'image.dat'),'encoding':'ascii'}
+        return subprocess.CompletedProcess(command, 0, json.dumps(payload))
+    monkeypatch.setattr(subprocess, 'run', run)
+    result = scan_image_key_from_memory(tmp_path)
+    assert result.pid == 123 and result.xor_key == 166 and result.verified
+
 def test_verified_store_works_without_weflow(tmp_path, monkeypatch):
     root = tmp_path / 'xwechat_files'
     (root / 'local/db_storage').mkdir(parents=True)

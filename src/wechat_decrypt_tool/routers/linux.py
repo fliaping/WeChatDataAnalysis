@@ -32,7 +32,8 @@ def _owner(request: Request):
     if request.headers.get('X-WeHarbor-Action') != 'sync':
         raise HTTPException(403, 'X-WeHarbor-Action: sync is required')
     origin = request.headers.get('origin')
-    if origin and origin.rstrip('/') != str(request.base_url).rstrip('/'):
+    from urllib.parse import urlsplit
+    if origin and urlsplit(origin).netloc != request.headers.get('host', ''):
         raise HTTPException(403, 'Cross-origin requests are not allowed')
 
 @router.post('/capture')

@@ -60,7 +60,14 @@ def capture_linux_key(account: str, config_path: str | Path) -> dict:
     # subprocess.run already kills its own child on timeout. Upstream's global
     # killall(gdb) cleanup could stop unrelated debuggers and is never invoked.
     tool._cleanup_tracer = lambda pid: None
-    key = tool.capture_passphrase(timeout=120)
+    helper = os.environ.get('WECHAT_TOOL_CAPTURE_HELPER')
+    if helper:
+        import subprocess
+        result = subprocess.run(['sudo', '-n', helper], input=json.dumps({'mode':'database'}),
+            text=True, capture_output=True, timeout=130, check=True)
+        key = json.loads(result.stdout)['key']
+    else:
+        key = tool.capture_passphrase(timeout=120)
     result = sync_account({'account': account, 'source': source, 'key': key}, force=True)
     if not result['changed']:
         raise ValueError('Captured key did not authenticate a local database')

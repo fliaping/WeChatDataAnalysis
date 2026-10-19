@@ -30,3 +30,11 @@ The user must manually log out and log in within 120 seconds; the integration
 never performs logout. A captured key is stored only after database
 authentication. Its upstream OpenSSL decrypt path and global GDB cleanup are
 not used; decryption stays in the tested Python reader.
+
+WeHarbor runs the API as the desktop user. Its optional
+`WECHAT_TOOL_CAPTURE_HELPER` names a root-owned, fixed sudo entry installed by
+the image; JSON on stdin selects database or image capture. This keeps ptrace
+privileges out of the web process. The helper must accept no command arguments,
+ignore caller Python paths, and validate local account/process ownership. Do
+not grant sudo access to the API interpreter or to arbitrary scripts under the
+user-writable profile.

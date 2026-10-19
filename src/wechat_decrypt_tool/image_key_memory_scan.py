@@ -718,6 +718,17 @@ def scan_image_key_from_memory(
     clock: Callable[[], float] | None = None,
 ) -> MemoryImageKeyResolution | None:
     """Poll all WeChat processes until a V2-verified image AES key is found."""
+    helper = os.environ.get('WECHAT_TOOL_CAPTURE_HELPER') if sys.platform.startswith('linux') else None
+    if helper and pid_provider is None and process_scanner is None:
+        result = subprocess.run(['sudo', '-n', helper],
+            input=json.dumps({'mode':'image', 'account_dir':str(Path(account_dir).resolve())}),
+            text=True, capture_output=True, timeout=75, check=True)
+        payload = json.loads(result.stdout)
+        if payload is None:
+            return None
+        return MemoryImageKeyResolution(pid=int(payload['pid']), xor_key=int(payload['xor_key']),
+            aes_key=payload['aes_key'], verified=payload['verified'] is True,
+            template_path=Path(payload['template_path']), encoding=payload['encoding'])
     try:
         timeout_seconds = max(0.0, float(timeout))
         interval_seconds = float(interval)
