@@ -161,7 +161,7 @@ def sync_account(item: dict, *, force: bool = False) -> dict:
             except Exception as exc:
                 failures.append({'database': name, 'error': type(exc).__name__})
         _atomic_write_json(output / '_source.json', {'wxid_dir': str(source.parent),
-            'db_storage_path': str(source), 'import_mode': 'manual_import', 'platform': 'linux'})
+            'db_storage_path': str(source), 'import_mode': 'linux_snapshot', 'platform': 'linux'})
         _atomic_write_json(report_path, {'signatures': signatures})
     if changed:
         upsert_account_keys_in_store(account, db_key=str(item['key']),

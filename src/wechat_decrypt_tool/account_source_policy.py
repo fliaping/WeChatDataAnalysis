@@ -8,6 +8,7 @@ from typing import Any
 _DECRYPTED_SNAPSHOT_IMPORT_MODES = {
     "manual_import",
     "account_archive_import",
+    "linux_snapshot",
 }
 
 
@@ -41,8 +42,16 @@ def account_prefers_decrypted_snapshot(account_dir: Path) -> bool:
     ).is_file()
 
 
+def source_metadata_blocks_host_media(value: Any) -> bool:
+    # Linux synchronizes encrypted DBs to validated snapshots, but its images
+    # remain in the explicitly recorded local source. Portable imports remain
+    # isolated from host paths and captured keys.
+    return source_metadata_prefers_decrypted_snapshot(value) and value.get("import_mode") != "linux_snapshot"
+
+
 __all__ = [
     "account_prefers_decrypted_snapshot",
     "load_account_source_metadata",
     "source_metadata_prefers_decrypted_snapshot",
+    "source_metadata_blocks_host_media",
 ]

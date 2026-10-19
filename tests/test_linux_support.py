@@ -53,6 +53,39 @@ def test_linux_xor_and_v2_image_roundtrip():
     assert _decrypt_wechat_dat_v4(dat, xor, key) == image
     with pytest.raises(ValueError): _decrypt_wechat_dat_v4(dat, xor, b'wrong image key!')
 
+def test_linux_snapshot_keeps_local_media_and_decrypted_database_policy(tmp_path, monkeypatch):
+    import io
+    from PIL import Image
+    from wechat_decrypt_tool import media_helpers, key_store
+    from wechat_decrypt_tool.account_source_policy import account_prefers_decrypted_snapshot
+    source = tmp_path / 'xwechat_files' / 'local'
+    (source / 'db_storage').mkdir(parents=True)
+    account = tmp_path / 'output' / 'local'; account.mkdir(parents=True)
+    for name in ['session.db', 'contact.db']: (account / name).touch()
+    metadata = {'import_mode': 'linux_snapshot', 'platform': 'linux',
+                'wxid_dir': str(source), 'db_storage_path': str(source / 'db_storage')}
+    (account / '_source.json').write_text(json.dumps(metadata))
+    key, xor = b'0123456789abcdef', 0xa6
+    monkeypatch.setattr(key_store, 'get_account_keys_from_store', lambda _: {
+        'image_key_verified': True, 'image_key_source_wxid_dir': str(source),
+        'image_aes_key': key.decode(), 'image_xor_key': f'{xor:02x}'})
+    png = io.BytesIO(); Image.new('RGB', (12, 12), 'blue').save(png, format='PNG')
+    image = png.getvalue()
+    encrypted = AES.new(key, AES.MODE_ECB).encrypt(pad(image[:32], 16))
+    dat = source / 'image.dat'
+    dat.write_bytes(struct.pack('<6sLLx', b'\x07\x08V2\x08\x07', 32, 16) + encrypted
+                    + image[32:-16] + bytes(v ^ xor for v in image[-16:]))
+    assert account_prefers_decrypted_snapshot(account)
+    assert media_helpers._resolve_account_wxid_dir(account) == source
+    assert media_helpers._resolve_account_db_storage_dir(account) == source / 'db_storage'
+    assert media_helpers._read_and_maybe_decrypt_media(dat, account_dir=account) == (image, 'image/png')
+    # Imported archives must still never follow host source paths.
+    metadata['import_mode'] = 'manual_import'
+    (account / '_source.json').write_text(json.dumps(metadata))
+    assert account_prefers_decrypted_snapshot(account)
+    assert media_helpers._resolve_account_wxid_dir(account) is None
+    assert media_helpers._resolve_account_db_storage_dir(account) is None
+
 def test_linux_capture_rejects_unknown_account_before_debugger(tmp_path):
     with pytest.raises(ValueError, match='Unknown local account'):
         linux.capture_linux_key('not-a-local-account', tmp_path / 'absent.json')

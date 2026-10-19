@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 
 from fastapi import HTTPException
 
-from .account_source_policy import source_metadata_prefers_decrypted_snapshot
+from .account_source_policy import source_metadata_prefers_decrypted_snapshot, source_metadata_blocks_host_media
 from .app_paths import get_output_databases_dir
 from .chat_accounts import list_chat_account_names, resolve_chat_account_context
 from .chat_helpers import _decode_message_content
@@ -1743,7 +1743,7 @@ def _guess_wxid_dir_from_common_paths(account_name: str) -> Optional[Path]:
 
 def _resolve_account_wxid_dir(account_dir: Path) -> Optional[Path]:
     info = _load_account_source_info(account_dir)
-    if source_metadata_prefers_decrypted_snapshot(info):
+    if source_metadata_blocks_host_media(info):
         return None
     wxid_dir = str(info.get("wxid_dir") or "").strip()
     if wxid_dir:
@@ -1758,7 +1758,7 @@ def _resolve_account_wxid_dir(account_dir: Path) -> Optional[Path]:
 
 def _resolve_account_db_storage_dir(account_dir: Path) -> Optional[Path]:
     info = _load_account_source_info(account_dir)
-    if source_metadata_prefers_decrypted_snapshot(info):
+    if source_metadata_blocks_host_media(info):
         return None
     db_storage_path = str(info.get("db_storage_path") or "").strip()
     if db_storage_path:
