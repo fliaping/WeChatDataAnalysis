@@ -30,13 +30,14 @@ def stream_linux_snapshot_events(request: Request, account_dir: Path) -> Streami
             if ready or revision != previous_revision:
                 payload = {'type': 'ready' if ready else 'snapshot_updated',
                            'mode': 'linux_snapshot', 'account': account_dir.name,
-                           'refreshIntervalSeconds': 30, **state}
+                           'refreshIntervalSeconds': 2,
+                           'targetLatencySeconds': 3, **state}
                 yield 'data: ' + json.dumps(payload, separators=(',', ':')) + '\n\n'
                 previous_revision, ready = revision, False
             if time.monotonic() - last_heartbeat >= 15:
                 yield ': ping\n\n'
                 last_heartbeat = time.monotonic()
-            await asyncio.sleep(1)
+            await asyncio.sleep(.2)
 
     return StreamingResponse(events(), media_type='text/event-stream', headers={
         'Cache-Control': 'no-cache', 'Connection': 'keep-alive', 'X-Accel-Buffering': 'no'})

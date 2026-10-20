@@ -306,6 +306,11 @@ async def _startup_native_core() -> None:
 @app.on_event("startup")
 async def _startup_background_jobs() -> None:
     if sys.platform.startswith('linux'):
+        import asyncio
+        from .linux_snapshot_watch import SnapshotWatch
+        from .routers.linux import _config
+        app.state.linux_snapshot_watch = SnapshotWatch(_config())
+        app.state.linux_snapshot_task = asyncio.create_task(app.state.linux_snapshot_watch.run())
         # Linux publishes authenticated Python snapshots; proprietary native
         # capture/realtime binaries have no Linux distribution.
         return
@@ -329,6 +334,13 @@ async def _startup_background_jobs() -> None:
 
 @app.on_event("shutdown")
 async def _shutdown_wcdb_realtime() -> None:
+    import asyncio
+    import contextlib
+    task = getattr(app.state, 'linux_snapshot_task', None)
+    if task:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
     try:
         CHAT_REALTIME_AUTOSYNC.stop()
     except Exception:

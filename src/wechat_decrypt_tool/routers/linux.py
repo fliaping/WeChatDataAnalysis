@@ -16,13 +16,15 @@ def _config():
     return Path(os.environ.get('WECHAT_TOOL_WEFLOW_CONFIG', str(Path.home() / '.config/weflow/WeFlow-config.json')))
 
 @router.get('/status')
-def status():
+def status(request: Request):
     try:
         accounts = [{'account': x['account'], 'database_key_available': bool(x['key']),
                      'image_key_available': bool(x.get('aes'))} for x in available_accounts(_config())]
     except (OSError, ValueError):
         accounts = []
+    watcher = getattr(request.app.state, 'linux_snapshot_watch', None)
     return {'platform': sys.platform, 'supported': sys.platform.startswith('linux'),
+            'snapshot_watch': dict(watcher.state) if watcher else {'mode': 'unavailable'},
             'accounts': accounts, 'image_decryption': ['XOR', 'V2 AES + XOR'],
             'memory_capture': sys.platform.startswith('linux'),
             'capture_available': bool(shutil.which('gdb')),
