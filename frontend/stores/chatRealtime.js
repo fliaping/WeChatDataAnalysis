@@ -100,6 +100,7 @@ export const useChatRealtimeStore = defineStore('chatRealtime', () => {
         ? {
             ...defaultDataSourceStatus,
             preferredSource: 'decrypted',
+            activeSource: 'decrypted',
             fallbackActive: false,
             reason: '',
           }

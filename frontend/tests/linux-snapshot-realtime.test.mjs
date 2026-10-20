@@ -30,6 +30,7 @@ test('Linux snapshot mode subscribes, refreshes on reconnect and changes, and ke
   const store = context.store
   assert.equal(await store.enable({ silent: true }), true)
   assert.equal(responses.at(-1).dataSourceStatus.preferredSource, 'decrypted')
+  assert.equal(responses.at(-1).dataSourceStatus.activeSource, 'decrypted')
   assert.equal(responses.at(-1).dataSourceStatus.fallbackActive, false)
   assert.ok(stream.url.startsWith('/analysis/api/chat/realtime/messages?'))
   stream.onmessage({ data: JSON.stringify({ type: 'ready', mode: 'linux_snapshot' }) })
