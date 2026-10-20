@@ -180,8 +180,14 @@ def sync_account(item: dict, *, force: bool = False) -> dict:
             value = str(xor).strip()
             # WeFlow stores decimal bytes; this application's store uses hex.
             xor = int(value, 16 if item.get('xor_format') == 'hex' or value.lower().startswith('0x') or not value.isdecimal() else 10)
-        templates = scan_v2_templates(source.parent)
         aes = str(item['aes'])[:16]
+        cached = get_account_keys_from_store(account)
+        if (cached.get('image_key_verified') and cached.get('image_aes_key') == aes
+                and cached.get('image_xor_key') == f'{xor:02x}'
+                and cached.get('image_key_source_wxid_dir') == str(source.parent)):
+            return {'account': account, 'changed': changed, 'unchanged': len(skipped),
+                    'failed': failures, 'image_key_verified': True}
+        templates = scan_v2_templates(source.parent)
         if verify_key_pair(xor, aes, templates):
             upsert_account_keys_in_store(account, image_xor_key=f'{xor:02x}', image_aes_key=aes,
                 image_key_verified=True, image_key_source='weflow_linux_verified',

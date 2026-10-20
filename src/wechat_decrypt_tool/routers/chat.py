@@ -856,7 +856,8 @@ async def get_chat_realtime_status(account: Optional[str] = None):
             "status": "success", "account": account_dir.name, "available": True,
             "realtime": {"mode": "linux_snapshot", "snapshot_preferred": True,
                          "connected": False, "probe_attempted": False,
-                         "refresh_interval_seconds": 30, **snapshot_state(account_dir)},
+                         "refresh_interval_seconds": 2, "target_latency_seconds": 3,
+                         **snapshot_state(account_dir)},
         }
     if account_prefers_decrypted_snapshot(account_dir):
         return {
