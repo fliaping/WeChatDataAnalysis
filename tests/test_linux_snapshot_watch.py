@@ -89,3 +89,38 @@ def test_only_database_and_wal_events_trigger_publication():
     assert watch.database_change(None, '/data/session.db')
     assert not watch.database_change(None, '/data/session.db-shm')
     assert not watch.database_change(None, '/data/image.dat')
+
+
+def test_invalid_watch_recovers_with_bounded_fallback(tmp_path, monkeypatch):
+    monitor = watch.SnapshotWatch(tmp_path / 'config.json')
+    calls = {'watch': 0, 'sync': 0}
+    monkeypatch.setattr(monitor, 'roots', lambda: (tmp_path,))
+    monkeypatch.setattr(watch, 'FALLBACK_SECONDS', 0)
+
+    async def sync():
+        calls['sync'] += 1
+
+    async def events(*args, **kwargs):
+        calls['watch'] += 1
+        if calls['watch'] == 1:
+            raise ValueError('watch root changed during registration')
+        await asyncio.sleep(60)
+        yield set()
+
+    monkeypatch.setattr(monitor, 'sync', sync)
+    monkeypatch.setattr(watch, 'awatch', events)
+
+    async def run():
+        task = asyncio.create_task(monitor.run())
+        try:
+            async with asyncio.timeout(1):
+                while calls['watch'] < 2:
+                    await asyncio.sleep(.001)
+            assert calls['sync'] == 2
+            assert monitor.state['mode'] == 'filesystem_events'
+        finally:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
+    asyncio.run(run())

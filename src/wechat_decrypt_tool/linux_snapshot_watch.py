@@ -66,7 +66,7 @@ class SnapshotWatch:
                     await self.sync()
                     if self.roots() != roots:
                         break
-            except (OSError, RuntimeError) as exc:
+            except (OSError, RuntimeError, ValueError) as exc:
                 self.state.update(mode='polling_fallback', last_error=type(exc).__name__)
                 await asyncio.sleep(FALLBACK_SECONDS)
                 await self.sync()
