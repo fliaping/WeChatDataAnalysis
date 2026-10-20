@@ -17,6 +17,18 @@ accounts, authenticates databases and checks SQLite integrity before atomic
 publication. Changed DB/WAL pairs are recopied until stable. Previously verified
 outputs remain available if a source is busy or a key fails.
 
+On Linux, API startup owns one serialized DB/WAL watcher. `watchfiles` uses
+inotify with a 150 ms debounce; a two-second timeout scan recovers missed
+events and discovers account changes. If watching fails, bounded polling
+continues. Only successfully authenticated, integrity-checked snapshots are
+published. SSE observes their revisions every 200 ms and refreshes the page
+only after publication. The target is 1–3 seconds after a committed source
+change, not a native WCDB connection or a latency guarantee: busy files,
+decryption time and host load can delay updates. `GET /api/linux/status`
+exposes `snapshot_watch` mode, duration and failure counts without secrets.
+Already verified image keys are reused without rescanning the media tree on
+every database refresh; invalid or missing keys still require verification.
+
 Build the embedded UI using `NUXT_APP_BASE_URL=/analysis/` and
 `NUXT_PUBLIC_API_BASE=/analysis/api npm run generate` in `frontend/`.
 Set `WECHAT_TOOL_UI_DIR` to the generated `.output/public` directory.
