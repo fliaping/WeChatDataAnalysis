@@ -152,6 +152,8 @@ app.include_router(_system_router)
 app.include_router(_cdn_router)
 from .routers.linux import router as _linux_router
 app.include_router(_linux_router)
+from .routers.advanced import router as _advanced_router
+app.include_router(_advanced_router)
 
 
 # Python's MIME database inherits Windows registry overrides.  Keep the
@@ -264,6 +266,31 @@ def _maybe_mount_frontend() -> None:
 
 
 _maybe_mount_frontend()
+
+
+@app.on_event("startup")
+async def _startup_advanced() -> None:
+    import asyncio
+    from .advanced.service import reconcile
+    from .advanced.tasks import scheduler
+    from .advanced.contacts import scheduler as contact_scheduler
+    from .routers.advanced import mcp_token
+    mcp_token()
+    app.state.advanced_reconcile = asyncio.create_task(reconcile())
+    app.state.advanced_scheduler = asyncio.create_task(scheduler(app))
+    app.state.advanced_contacts = asyncio.create_task(contact_scheduler(app))
+
+
+@app.on_event("shutdown")
+async def _shutdown_advanced() -> None:
+    import asyncio
+    import contextlib
+    for name in ('advanced_reconcile', 'advanced_scheduler', 'advanced_contacts'):
+        task = getattr(app.state, name, None)
+        if task:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
 
 
 @app.on_event("startup")

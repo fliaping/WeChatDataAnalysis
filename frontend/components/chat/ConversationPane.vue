@@ -40,7 +40,7 @@
             class="header-btn-icon"
             title="添加消息"
             aria-label="添加消息"
-            @click="openFeatureUnavailableDialog"
+            @click="openFeatureUnavailableDialog({ feature: 'add-text', account: selectedAccount, username: selectedContact.username })"
           >
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
               <path d="M12 5v14M5 12h14" />
@@ -153,14 +153,17 @@
 
       <MessageList :state="state" />
 
-      <form class="chat-composer" @submit.prevent="openFeatureUnavailableDialog">
+      <form class="chat-composer" @submit.prevent="prepareSend">
         <textarea
+          v-model="outgoingText"
           class="chat-composer-input"
           rows="2"
           aria-label="输入要发送的微信消息"
+          maxlength="4000"
+          required
         />
         <div class="chat-composer-toolbar">
-          <button type="submit" class="chat-composer-send">发送</button>
+          <button type="submit" class="chat-composer-send">准备发送</button>
         </div>
       </form>
 
@@ -211,8 +214,9 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import { defineComponent, ref, unref } from 'vue'
 import MessageList from '~/components/chat/MessageList.vue'
+import { useAdvancedFeaturesDialog } from '~/composables/useAdvancedFeaturesDialog'
 
 export default defineComponent({
   name: 'ConversationPane',
@@ -221,8 +225,14 @@ export default defineComponent({
     state: { type: Object, required: true }
   },
   setup(props) {
+    const outgoingText = ref('')
+    const { openDialog } = useAdvancedFeaturesDialog()
+    const prepareSend = () => {
+      if (!outgoingText.value.trim()) return
+      return openDialog({ feature: 'send-text', account: unref(props.state.selectedAccount), username: unref(props.state.selectedContact)?.username, text: outgoingText.value })
+    }
     return {
-      ...props.state
+      ...props.state, outgoingText, prepareSend
     }
   }
 })

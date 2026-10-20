@@ -42,18 +42,19 @@ class TestChatEditSurfaceFrontend(unittest.TestCase):
         )[0]
 
         self.assertIn("if (!isLikelyTextMessage(message)) return", handler)
-        self.assertIn("openFeatureUnavailableDialog()", handler)
+        self.assertIn("openFeatureWorkbench({", handler)
+        self.assertIn("feature: 'edit-text'", handler)
+        self.assertIn("message_id: message.id", handler)
         self.assertNotIn("showErrorAlert", handler)
         self.assertNotIn("window.alert", handler)
         self.assertNotIn("api.", handler)
-        self.assertLess(handler.index("closeContextMenu()"), handler.index("openFeatureUnavailableDialog()"))
-        self.assertIn("openDialog: openFeatureUnavailableDialog } = useAdvancedFeaturesDialog()", editing)
+        self.assertLess(handler.index("closeContextMenu()"), handler.index("openFeatureWorkbench({"))
+        self.assertIn("openDialog: openFeatureWorkbench } = useAdvancedFeaturesDialog()", editing)
         self.assertIn("useState('advanced-features-dialog-open', () => false)", advanced_dialog)
-        self.assertIn("open.value = true", advanced_dialog)
+        self.assertIn("return navigateTo({ path: '/advanced'", advanced_dialog)
+        self.assertNotIn("open.value = true", advanced_dialog)
         self.assertIn("open.value = false", advanced_dialog)
-        self.assertIn("<AdvancedFeaturesDialog", app)
-        self.assertIn(':open="advancedFeaturesDialogOpen"', app)
-        self.assertIn('@close="closeAdvancedFeaturesDialog"', app)
+        self.assertNotIn("<AdvancedFeaturesDialog", app)
         self.assertNotIn("modifyTextUnavailableDialogOpen", overlays)
 
         for symbol in (

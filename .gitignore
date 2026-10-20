@@ -9,6 +9,7 @@ wheels/
 
 # Virtual environments
 .venv
+/advanced/
 /output/
 /.native-core-cache-v1/
 /.native-core-license-v1/

@@ -1307,6 +1307,15 @@ class SnsExportManager:
         with self._lock:
             return self._jobs.get(export_id)
 
+    def release_job(self, export_id: str) -> bool:
+        """Release an automation-owned terminal job after its receipt is saved."""
+        with self._lock:
+            job = self._jobs.get(export_id)
+            if job is None or job.status not in {"done", "error", "cancelled"} or job.staged_files:
+                return False
+            del self._jobs[export_id]
+            return True
+
     def cancel_job(self, export_id: str) -> bool:
         with self._lock:
             job = self._jobs.get(export_id)
@@ -2903,10 +2912,17 @@ class SnsExportManager:
 
         try:
             with zipfile.ZipFile(str(tmp_zip), mode="w", compression=zipfile.ZIP_DEFLATED) as raw_zf:
-                zf = IntegrityZipWriter(raw_zf)
+                zf = IntegrityZipWriter(raw_zf) if output_mode == "zip" else raw_zf
                 html_assets: Optional[dict[str, str]] = None
                 if export_format == "html":
-                    css_payload = export_css("sns")
+                    try:
+                        css_payload = export_css("sns")
+                    except RuntimeError:
+                        if output_mode != "folder":
+                            raise
+                        # Incremental folders have no ZIP integrity runtime.
+                        # Linux builds can use the bundled offline stylesheet.
+                        css_payload = (Path(__file__).parent / "resources" / "sns_archive.css").read_text(encoding="utf-8")
                     if output_mode == "folder":
                         html_assets = {"cssPath": "assets/sns.css", "cssPayload": css_payload}
                         zf.writestr(html_assets["cssPath"], html_assets["cssPayload"])

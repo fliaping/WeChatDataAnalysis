@@ -255,8 +255,8 @@
           <section ref="aiSectionRef">
             <div class="mb-2.5 text-[12px] font-bold tracking-widest text-[var(--app-text-muted)]">AI 助手</div>
             <button type="button" class="flex w-full items-center justify-between gap-4 rounded-[10px] border border-[var(--app-border)] bg-[var(--app-surface-bg)] px-3.5 py-3 text-left" @click="openAiFeatures">
-              <span><span class="block text-[13px] font-medium text-[var(--app-text-primary)]">高级版 AI 服务</span><span class="mt-0.5 block text-[11px] text-[var(--app-text-muted)]">聊天问答、内容总结与消息出处</span></span>
-              <span class="shrink-0 text-[12px] text-[var(--app-accent)]">了解高级版</span>
+              <span><span class="block text-[13px] font-medium text-[var(--app-text-primary)]">DeepSeek Harness 助手</span><span class="mt-0.5 block text-[11px] text-[var(--app-text-muted)]">配置助手与微信 MCP 工具连接</span></span>
+              <span class="shrink-0 text-[12px] text-[var(--app-accent)]">打开设置</span>
             </button>
           </section>
 
@@ -703,7 +703,7 @@ const { openDialog: openAdvancedFeaturesDialog } = useAdvancedFeaturesDialog()
 
 const settingNavItems = [
   { key: 'desktop', label: '桌面行为', hint: '启动 / 关闭 / 端口' },
-  { key: 'ai', label: 'AI 助手', hint: '高级版功能' },
+  { key: 'ai', label: 'AI 助手', hint: 'DeepSeek Harness' },
   { key: 'voice', label: '语音转文字', hint: 'CPU / NVIDIA GPU' },
   { key: 'keys', label: '数据库与密钥', hint: '密钥查看 / 复制' },
   { key: 'startup', label: '启动偏好', hint: '默认页面' },
@@ -1045,7 +1045,7 @@ const handleClose = () => {
 
 const openAiFeatures = () => {
   handleClose()
-  openAdvancedFeaturesDialog()
+  openAdvancedFeaturesDialog({ feature: 'ai-assistant' })
 }
 
 const onEscKeydown = (event) => {

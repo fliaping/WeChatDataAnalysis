@@ -44,9 +44,9 @@
           <button
               type="button"
               class="mb-2 w-full px-3 py-2.5 rounded-md text-sm border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
-              @click="openAdvancedFeaturesDialog"
+              @click="openAdvancedFeaturesDialog({ feature: 'automation-moments-sync', account: selectedAccount })"
           >
-            发布朋友圈
+            连续同步并保存
           </button>
           <button
               type="button"

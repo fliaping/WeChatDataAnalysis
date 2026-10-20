@@ -1,0 +1,14 @@
+# Pass this patch to the official DeepSeek Harness alongside WeHarbor's MCP patch.
+# Change command/args/cwd for an installation outside this workspace.
+- insert:
+    - id: wechat-analysis-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: wechat-analysis
+        transport: stdio
+        command: python3
+        args: [/config/Workspace/WeChatDataAnalysis/scripts/advanced_mcp_stdio.py]
+        cwd: /config/Workspace/WeChatDataAnalysis
+        env:
+          WECHAT_ANALYSIS_MCP_URL: http://127.0.0.1:10392/api/advanced/mcp
+          WECHAT_ANALYSIS_MCP_TOKEN_FILE: /config/.local/share/weharbor/analysis/advanced/mcp.token

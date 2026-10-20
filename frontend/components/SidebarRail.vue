@@ -93,12 +93,12 @@
       <button
         type="button"
         class="sidebar-rail-action w-full h-[var(--sidebar-rail-step)] flex items-center justify-center cursor-pointer group"
-        :title="`高级版功能 · ${PRO_TOTAL} 项`"
-        :aria-label="`高级版功能介绍 · ${PRO_TOTAL} 项`"
+        :title="`免费高级功能 · ${PRO_TOTAL} 项`"
+        :aria-label="`打开高级功能 · ${PRO_TOTAL} 项`"
         @click="openAdvancedFeaturesDialog"
       >
         <span class="sidebar-rail-plate advanced-features-plate w-[44px] max-w-full h-[var(--sidebar-rail-btn)] rounded-md flex items-center justify-center">
-          <span class="advanced-features-label">高级版</span>
+          <span class="advanced-features-label">高级功能</span>
         </span>
       </button>
 

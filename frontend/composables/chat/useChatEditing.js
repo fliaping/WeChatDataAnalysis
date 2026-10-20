@@ -21,7 +21,7 @@ export const useChatEditing = ({
 }) => {
   const contextMenu = ref(initialContextMenu())
   const contextMenuElement = ref(null)
-  const { openDialog: openFeatureUnavailableDialog } = useAdvancedFeaturesDialog()
+  const { openDialog: openFeatureWorkbench } = useAdvancedFeaturesDialog()
 
   const closeContextMenu = () => {
     contextMenu.value = initialContextMenu()
@@ -218,7 +218,11 @@ export const useChatEditing = ({
     const message = contextMenu.value.message
     closeContextMenu()
     if (!isLikelyTextMessage(message)) return
-    openFeatureUnavailableDialog()
+    openFeatureWorkbench({
+      feature: 'edit-text', account: selectedAccount.value,
+      username: selectedContact.value?.username,
+      message_id: message.id, text: message.content || ''
+    })
   }
 
   const onLocateQuotedMessageClick = async () => {
@@ -235,7 +239,7 @@ export const useChatEditing = ({
     contextMenu,
     contextMenuElement,
     closeContextMenu,
-    openFeatureUnavailableDialog,
+    openFeatureUnavailableDialog: openFeatureWorkbench,
     openMediaContextMenu,
     isLikelyTextMessage,
     copyTextToClipboard,

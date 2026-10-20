@@ -423,3 +423,32 @@ def test_html_folder_export_uses_stable_css_without_zip_integrity_runtime():
         assert '<link rel="stylesheet" href="assets/sns.css"' in document
         assert 'data-wce-protected-root="1"' not in document
         assert (output / "assets" / "sns.css").read_text(encoding="utf-8") == ".wse-sns-page{color:#123}"
+
+        # Continuous Linux archives also work when the optional native CSS
+        # provider is unavailable; ZIP integrity remains required for ZIP mode.
+        job.options["folderName"] = "Linux_朋友圈"
+        with (
+            mock.patch.object(service, "sync_sns_realtime_timeline_latest", return_value={"status": "ok"}),
+            mock.patch.object(service, "export_css", side_effect=RuntimeError("native unavailable")),
+            mock.patch.object(service, "IntegrityZipWriter", side_effect=AssertionError("folder must not load ZIP runtime")),
+            mock.patch.object(service, "_account_display_name", return_value="Me"),
+        ):
+            output = manager._run_job(job, account_dir)
+        assert "正文" in (output / "wxid_friend.html").read_text(encoding="utf-8")
+        assert ".wse-sns-post-row" in (output / "assets" / "sns.css").read_text(encoding="utf-8")
+
+
+def test_automation_releases_only_terminal_jobs_without_browser_staged_files():
+    manager = service.SnsExportManager()
+    job = service.ExportJob(export_id="owned", account="wxid_me", options={})
+    manager._jobs[job.export_id] = job
+    assert not manager.release_job(job.export_id)
+    job.status = "running"
+    assert not manager.release_job(job.export_id)
+    job.status = "done"
+    job.staged_files = {"browser-file": {"path": "retained"}}
+    assert not manager.release_job(job.export_id)
+    job.staged_files = {}
+    assert manager.release_job(job.export_id)
+    assert manager.get_job(job.export_id) is None
+    assert not manager.release_job(job.export_id)
