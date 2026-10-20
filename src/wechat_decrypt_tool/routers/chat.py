@@ -20,7 +20,8 @@ from ..account_identity import (
     resolve_account_self_rowid,
     resolve_account_self_username,
 )
-from ..account_source_policy import account_prefers_decrypted_snapshot
+from ..account_source_policy import account_prefers_decrypted_snapshot, account_uses_linux_snapshot
+from ..linux_snapshot_events import snapshot_state, stream_linux_snapshot_events
 from ..logging_config import get_logger
 from ..chat_search_index import (
     get_chat_search_index_db_path,
@@ -850,6 +851,13 @@ def _scan_db_storage_mtime_ns(db_storage_dir: Path, *, scope: str = "all") -> in
 async def get_chat_realtime_status(account: Optional[str] = None):
     """检查实时模式前置条件，并实际打开 WCDB 账号连接。"""
     account_dir = _resolve_account_dir(account)
+    if account_uses_linux_snapshot(account_dir):
+        return {
+            "status": "success", "account": account_dir.name, "available": True,
+            "realtime": {"mode": "linux_snapshot", "snapshot_preferred": True,
+                         "connected": False, "probe_attempted": False,
+                         "refresh_interval_seconds": 30, **snapshot_state(account_dir)},
+        }
     if account_prefers_decrypted_snapshot(account_dir):
         return {
             "status": "success",
@@ -961,6 +969,8 @@ async def stream_chat_realtime_events(
         interval_ms = 5000
 
     account_dir = _resolve_account_dir(account)
+    if account_uses_linux_snapshot(account_dir):
+        return stream_linux_snapshot_events(request, account_dir)
     info = WCDB_REALTIME.get_status(account_dir)
     db_storage_dir = Path(str(info.get("db_storage_dir") or "").strip())
     if not db_storage_dir.exists() or not db_storage_dir.is_dir():

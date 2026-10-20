@@ -314,6 +314,11 @@ export const useChatRealtimeStore = defineStore('chatRealtime', () => {
       try {
         const data = JSON.parse(String(ev.data || '{}'))
         const type = String(data?.type || '').trim().toLowerCase()
+        if (type === 'snapshot_updated' || (type === 'ready' && data?.mode === 'linux_snapshot')) {
+          messageEvent.value = { ...data, type: 'snapshot_updated' }
+          changeSeq.value += 1
+          return
+        }
         if (type === 'ready') {
           return
         }

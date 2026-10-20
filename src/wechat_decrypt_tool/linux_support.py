@@ -7,6 +7,7 @@ import shutil
 import sqlite3
 import tempfile
 import threading
+import time
 from pathlib import Path
 
 from .app_paths import get_output_databases_dir
@@ -129,8 +130,6 @@ def sync_account(item: dict, *, force: bool = False) -> dict:
     output.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(output, 0o700)
     report_path = output / '_linux_sync.json'
-    previous = json.loads(report_path.read_text()) if report_path.exists() else {}
-    signatures = previous.get('signatures', {})
     decryptor = WeChatDatabaseDecryptor(str(item['key']))
     changed, skipped, failures = [], [], []
     paths = sorted(p for p in source.rglob('*.db') if not should_skip_source_database(p.name))
@@ -138,6 +137,8 @@ def sync_account(item: dict, *, force: bool = False) -> dict:
     if len(names) != len(set(names)):
         raise ValueError('Duplicate database basenames cannot be safely imported')
     with _LOCK, tempfile.TemporaryDirectory(prefix='.linux-', dir=output) as temporary:
+        previous = json.loads(report_path.read_text()) if report_path.exists() else {}
+        signatures = previous.get('signatures', {})
         os.chmod(temporary, 0o700)
         for original in paths:
             name = original.name
@@ -162,7 +163,13 @@ def sync_account(item: dict, *, force: bool = False) -> dict:
                 failures.append({'database': name, 'error': type(exc).__name__})
         _atomic_write_json(output / '_source.json', {'wxid_dir': str(source.parent),
             'db_storage_path': str(source), 'import_mode': 'linux_snapshot', 'platform': 'linux'})
-        _atomic_write_json(report_path, {'signatures': signatures})
+        _atomic_write_json(report_path, {
+            'signatures': signatures,
+            'revision': int(previous.get('revision', 0)) + bool(changed),
+            'last_attempt_at': time.time(),
+            'last_success_at': previous.get('last_success_at', 0) if failures else time.time(),
+            'failed_count': len(failures),
+        })
     if changed:
         upsert_account_keys_in_store(account, db_key=str(item['key']),
             db_key_source_wxid_dir=str(source.parent), db_key_source_db_storage_path=str(source))

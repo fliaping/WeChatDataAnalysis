@@ -17,6 +17,8 @@ from ..chat_helpers import (
     _resolve_account_dir,
 )
 from ..path_fix import PathFixRoute
+from ..account_source_policy import account_uses_linux_snapshot
+from ..linux_snapshot_events import stream_linux_snapshot_events
 from ..wcdb_realtime import (
     WCDB_REALTIME,
     get_display_names as _wcdb_get_display_names,
@@ -283,6 +285,8 @@ async def stream_chat_realtime_messages(
     username_norm = str(username or "").strip() or None
     if since_local_id and not username_norm:
         raise HTTPException(status_code=400, detail="since_local_id requires username")
+    if account_uses_linux_snapshot(account_dir):
+        return stream_linux_snapshot_events(request, account_dir)
     if username_norm and since_local_id == 0:
         try:
             last_event_local_id = int(str(request.headers.get("last-event-id") or "").rsplit(":", 1)[-1])

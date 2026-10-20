@@ -1129,9 +1129,14 @@ watch(realtimeMessageEventSeq, (next, previous) => {
 
 watch(realtimeChangeSeq, (next, previous) => {
   if (!process.client || document.visibilityState === 'hidden') return
-  if (next === previous || realtimeMessageEvent.value?.type !== 'conversation_updated') return
+  if (next === previous) return
+  const eventType = realtimeMessageEvent.value?.type
+  if (!['conversation_updated', 'snapshot_updated'].includes(eventType)) return
   if (accountBootstrapInProgress || accountChangeInProgress) return
   queueRealtimeSessionsRefresh()
+  if (eventType === 'snapshot_updated' && selectedContact.value?.username) {
+    void refreshSelectedMessages()
+  }
 })
 
 watch(realtimeToggleSeq, async () => {

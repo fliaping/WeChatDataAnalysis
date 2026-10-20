@@ -49,6 +49,13 @@ def source_metadata_blocks_host_media(value: Any) -> bool:
     return source_metadata_prefers_decrypted_snapshot(value) and value.get("import_mode") != "linux_snapshot"
 
 
+def account_uses_linux_snapshot(account_dir: Path) -> bool:
+    return (
+        load_account_source_metadata(account_dir).get("import_mode") == "linux_snapshot"
+        and account_prefers_decrypted_snapshot(account_dir)
+    )
+
+
 __all__ = [
     "account_prefers_decrypted_snapshot",
     "load_account_source_metadata",
