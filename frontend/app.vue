@@ -4,7 +4,7 @@
     <div class="flex-1 flex flex-col min-h-0 min-w-0">
       <!-- Desktop titlebar lives above the page content (right column) -->
       <DesktopTitleBar v-if="showDesktopTitleBar" />
-      <DataSourceFallbackBanner v-if="route.path !== '/agreement'" :status="selectedDataSourceStatus" />
+      <DataSourceFallbackBanner :status="selectedDataSourceStatus" />
       <div :class="contentClass">
         <NuxtPage />
       </div>
@@ -16,7 +16,7 @@
       @close="closeSettingsDialog"
     />
 
-    <ClientOnly v-if="route.path !== '/agreement'">
+    <ClientOnly>
       <PlanWindow />
     </ClientOnly>
 
@@ -39,7 +39,7 @@
       @close="dismissNoAccountGuide"
     />
 
-    <ClientOnly v-if="isDesktopUpdater && route.path !== '/agreement'">
+    <ClientOnly v-if="isDesktopUpdater">
       <DesktopUpdateDialog
         :open="desktopUpdate.open.value"
         :info="desktopUpdate.info.value"
@@ -54,26 +54,10 @@
         @ignore="desktopUpdate.ignore"
       />
     </ClientOnly>
-
-    <div
-      v-if="!firstUseRouteResolved"
-      class="first-use-route-guard"
-      role="status"
-      aria-live="polite"
-      aria-label="正在准备首次使用说明"
-    >
-      <img src="/logo.png" alt="" aria-hidden="true" />
-      <div class="first-use-route-guard-copy">
-        <span>正在准备使用须知…</span>
-        <a :href="firstUseAgreementHref" @click="openFirstUseAgreement">直接打开使用须知</a>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { nextTick } from 'vue'
-import { isFirstUseAgreementAccepted } from '~/lib/first-use-agreement'
 import { useThemeStore } from '~/stores/theme'
 import { useChatAccountsStore } from '~/stores/chatAccounts'
 import { usePrivacyStore } from '~/stores/privacy'
@@ -91,23 +75,6 @@ const privacyStore = usePrivacyStore()
 const chatAccounts = useChatAccountsStore()
 const { selectedAccount, selectedDataSourceStatus } = storeToRefs(chatAccounts)
 const noAccountGuideOpen = ref(false)
-const isAgreementRoute = (path = route.path) => {
-  const normalized = String(path || '').replace(/\/+$/, '') || '/'
-  return normalized === '/agreement'
-}
-const firstUseRouteResolved = ref(isAgreementRoute())
-const firstUseAgreementHref = computed(() => (
-  `${useRuntimeConfig().app.baseURL.replace(/\/$/, '')}/agreement?redirect=${encodeURIComponent(String(route.fullPath || '/'))}`
-))
-let firstUseGuardReady = false
-let firstUseNavigationPending = false
-
-const openFirstUseAgreement = (event) => {
-  if (!process.client || typeof window === 'undefined') return
-  event?.preventDefault?.()
-  window.location.replace(firstUseAgreementHref.value)
-}
-
 const accountDataRoutePrefixes = [
   '/chat',
   '/sns',
@@ -131,10 +98,6 @@ const checkNoAccountGuide = async () => {
 
   const path = String(route.path || '')
   const token = ++accountGuideCheckToken
-  if (!isFirstUseAgreementAccepted()) {
-    noAccountGuideOpen.value = false
-    return
-  }
   if (!isAccountDataRoute(path)) {
     noAccountGuideOpen.value = false
     return
@@ -170,26 +133,17 @@ if (process.client) {
 const isDesktop = ref(false)
 const isDesktopUpdater = ref(false)
 let desktopUpdaterInitialized = false
-let postAgreementRuntimeInitialized = false
 
 const initializeDesktopUpdater = async () => {
   if (
     desktopUpdaterInitialized
     || !isDesktopUpdater.value
-    || route.path === '/agreement'
-    || !isFirstUseAgreementAccepted()
   ) return
   desktopUpdaterInitialized = true
   await desktopUpdate.initListeners()
 }
 
-const initializePostAgreementRuntime = () => {
-  if (
-    postAgreementRuntimeInitialized
-    || route.path === '/agreement'
-    || !isFirstUseAgreementAccepted()
-  ) return
-  postAgreementRuntimeInitialized = true
+const initializeRuntime = () => {
   void chatAccounts.ensureLoaded()
   privacyStore.init()
   themeStore.init()
@@ -200,36 +154,7 @@ const updateDprVar = () => {
   document.documentElement.style.setProperty('--dpr', String(dpr))
 }
 
-const enforceFirstUseRoute = async () => {
-  if (!process.client || !firstUseGuardReady) return
-  if (isAgreementRoute() || isFirstUseAgreementAccepted()) {
-    firstUseRouteResolved.value = true
-    return
-  }
-
-  firstUseRouteResolved.value = false
-  if (firstUseNavigationPending) return
-  firstUseNavigationPending = true
-  const hardNavigationTimer = window.setTimeout(() => {
-    if (!isAgreementRoute() && !isFirstUseAgreementAccepted()) {
-      window.location.replace(firstUseAgreementHref.value)
-    }
-  }, 1500)
-  try {
-    await navigateTo({
-      path: '/agreement',
-      query: { redirect: route.fullPath || '/' }
-    }, { replace: true })
-  } catch {
-    window.location.replace(firstUseAgreementHref.value)
-  } finally {
-    window.clearTimeout(hardNavigationTimer)
-    firstUseNavigationPending = false
-    firstUseRouteResolved.value = isAgreementRoute() || isFirstUseAgreementAccepted()
-  }
-}
-
-onMounted(async () => {
+onMounted(() => {
   const isElectron = /electron/i.test(String(navigator.userAgent || ''))
   const api = window?.wechatDesktop
   isDesktop.value = isElectron && !!api
@@ -243,21 +168,11 @@ onMounted(async () => {
   window.addEventListener('resize', updateDprVar)
 
   void initializeDesktopUpdater()
-  initializePostAgreementRuntime()
-
-  await nextTick()
-  firstUseGuardReady = true
-  await enforceFirstUseRoute()
+  initializeRuntime()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', updateDprVar)
-})
-
-watch(() => route.path, () => {
-  void enforceFirstUseRoute()
-  void initializeDesktopUpdater()
-  initializePostAgreementRuntime()
 })
 
 const setupShellBackgroundRoutes = new Set([
@@ -265,8 +180,7 @@ const setupShellBackgroundRoutes = new Set([
   '/import',
   '/decrypt',
   '/detection-result',
-  '/decrypt-result',
-  '/agreement'
+  '/decrypt-result'
 ])
 
 const useSetupShellBackground = computed(() => {
@@ -304,7 +218,6 @@ const showSidebar = computed(() => {
   if (path === '/' || path === '/import') return false
   if (path === '/decrypt' || path === '/detection-result' || path === '/decrypt-result') return false
   if (path === '/landing' || path === '/site') return false
-  if (isAgreementRoute(path)) return false
   return !(path === '/wrapped' || path.startsWith('/wrapped/'))
 })
 </script>
@@ -355,44 +268,5 @@ html[data-theme='dark'] .theme-app-shell,
 html[data-theme='dark'] .theme-app-shell-setup,
 html[data-theme='dark'] .theme-app-shell-wrapped {
   background: var(--app-shell-bg);
-}
-
-.first-use-route-guard {
-  position: fixed;
-  inset: 0;
-  z-index: 30000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background: var(--app-surface-bg, #ffffff);
-  color: var(--app-text-secondary, #5f5f5f);
-  font-size: 14px;
-}
-
-html[data-first-use-route='agreement'] .first-use-route-guard,
-html[data-first-use-accepted='true'] .first-use-route-guard {
-  display: none;
-}
-
-.first-use-route-guard-copy {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
-}
-
-.first-use-route-guard-copy a {
-  color: var(--app-accent, #07c160);
-  font-size: 13px;
-  font-weight: 650;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.first-use-route-guard img {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
 }
 </style>
