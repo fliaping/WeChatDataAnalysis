@@ -25,7 +25,7 @@
             type="button"
             class="group flex w-full flex-col items-start rounded-[6px] px-3 py-1.5 text-left transition select-none"
             :class="activeSection === item.key ? 'bg-[var(--app-accent)]' : 'hover:bg-[#f0f0f0]/60'"
-            @click="item.key === 'ai' ? openAiFeatures() : scrollToSection(item.key)"
+            @click="scrollToSection(item.key)"
           >
             <div class="text-[12px] font-medium" :class="activeSection === item.key ? 'text-white' : 'text-[#777] group-hover:text-[#333]'">
               {{ item.label }}
@@ -250,14 +250,6 @@
                 <ErrorNotice v-if="desktopLogFileError" :message="desktopLogFileError" compact manual class="mt-1.5 text-[11px] text-red-600" />
               </div>
             </div>
-          </section>
-
-          <section ref="aiSectionRef">
-            <div class="mb-2.5 text-[12px] font-bold tracking-widest text-[var(--app-text-muted)]">AI 助手</div>
-            <button type="button" class="flex w-full items-center justify-between gap-4 rounded-[10px] border border-[var(--app-border)] bg-[var(--app-surface-bg)] px-3.5 py-3 text-left" @click="openAiFeatures">
-              <span><span class="block text-[13px] font-medium text-[var(--app-text-primary)]">DeepSeek Harness 助手</span><span class="mt-0.5 block text-[11px] text-[var(--app-text-muted)]">配置助手与微信 MCP 工具连接</span></span>
-              <span class="shrink-0 text-[12px] text-[var(--app-accent)]">打开设置</span>
-            </button>
           </section>
 
           <section ref="voiceSectionRef">
@@ -699,11 +691,9 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 const api = useApi()
 const { openPlanWindow } = usePlanWindow()
-const { openDialog: openAdvancedFeaturesDialog } = useAdvancedFeaturesDialog()
 
 const settingNavItems = [
   { key: 'desktop', label: '桌面行为', hint: '启动 / 关闭 / 端口' },
-  { key: 'ai', label: 'AI 助手', hint: 'DeepSeek Harness' },
   { key: 'voice', label: '语音转文字', hint: 'CPU / NVIDIA GPU' },
   { key: 'keys', label: '数据库与密钥', hint: '密钥查看 / 复制' },
   { key: 'startup', label: '启动偏好', hint: '默认页面' },
@@ -717,7 +707,6 @@ const contentScrollRef = ref(null)
 const desktopSectionRef = ref(null)
 const desktopLogFileRef = ref(null)
 const voiceSectionRef = ref(null)
-const aiSectionRef = ref(null)
 const keysSectionRef = ref(null)
 const startupSectionRef = ref(null)
 const mediaSectionRef = ref(null)
@@ -962,7 +951,6 @@ const refreshDesktopOutputDirProgress = async () => {
 
 const sectionElements = computed(() => [
   { key: 'desktop', el: desktopSectionRef.value },
-  { key: 'ai', el: aiSectionRef.value },
   { key: 'voice', el: voiceSectionRef.value },
   { key: 'keys', el: keysSectionRef.value },
   { key: 'startup', el: startupSectionRef.value },
@@ -986,11 +974,6 @@ const scrollToSection = (key) => {
 
 const scrollToFocusTarget = async () => {
   const focusTarget = String(props.focusTarget || '').trim()
-  if (focusTarget === 'ai') {
-    await nextTick()
-    scrollToSection('ai')
-    return
-  }
   if (focusTarget === 'voice') {
     await nextTick()
     scrollToSection('voice')
@@ -1041,11 +1024,6 @@ const onContentScroll = () => {
 
 const handleClose = () => {
   emit('close')
-}
-
-const openAiFeatures = () => {
-  handleClose()
-  openAdvancedFeaturesDialog({ feature: 'ai-assistant' })
 }
 
 const onEscKeydown = (event) => {

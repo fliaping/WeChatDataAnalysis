@@ -89,9 +89,6 @@ export const PRO_GROUPS = [
   {
     key: "ai-mcp", label: "AI 与 MCP", tag: "ASSIST", icon: "fa-wand-magic-sparkles",
     items: [
-      { key: "ai-assistant", name: "AI 助手", caption: "围绕聊天记录提问、总结重点，并查看回答引用的消息出处。", use: "聊天问答", need: "从聊天里找答案，结论能回到原消息核对", overview: true,
-        story: "把零散的聊天整理成有出处的回答与总结。", flow: ["选择聊天范围", "提问或总结", "查看引用来源"],
-        edge: "高级版功能 · 回答请结合原消息核实" },
       { key: "mcp-access", name: "MCP 接入", caption: "让支持 MCP 的 AI 客户端接入聊天数据，按需查询、分析和整理。", use: "连接 AI 客户端", need: "在常用 AI 客户端里使用聊天记录", overview: true,
         story: "在支持 MCP 的 AI 客户端里围绕聊天资料展开分析。", flow: ["连接 AI 客户端", "按需查询聊天", "汇总分析结果"],
         edge: "高级版功能 · 按客户端请求读取所需资料" },

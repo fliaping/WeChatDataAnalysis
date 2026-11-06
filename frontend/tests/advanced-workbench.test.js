@@ -21,7 +21,7 @@ beforeEach(() => {
   blockedFeatures = ['send-image', 'contact-search']
   api = vi.fn(async (path, options) => {
     if (path === '/settings') return { origin: 'http://127.0.0.1:8766', harness_url: '/assistant/', token_configured: true }
-    if (path === '/capabilities') return { counts: { available: 31, total: 79 }, features: Object.fromEntries(PRO_ITEMS.map(i => [i.key, { state: blockedFeatures.includes(i.key) ? 'blocked' : 'available', reason: blockedFeatures.includes(i.key) ? '缺少驱动' : '' }])) }
+    if (path === '/capabilities') return { counts: { available: 31, total: 78 }, features: Object.fromEntries(PRO_ITEMS.map(i => [i.key, { state: blockedFeatures.includes(i.key) ? 'blocked' : 'available', reason: blockedFeatures.includes(i.key) ? '缺少驱动' : '' }])) }
     if (path.startsWith('/attachments/')) return { path: '/config/uploads/private/photo.png', filename: 'photo.png', size: 8 }
     if (path === '/actions') return { actions: [] }
     if (path === '/tasks' && !options) return { tasks: [] }
@@ -114,9 +114,9 @@ describe('free advanced workbench', () => {
     expect(api.mock.calls.some(([path]) => path.endsWith('/activate'))).toBe(false)
   })
 
-  it('renders all 79 features and blocks a missing real driver', async () => {
+  it('renders all 78 features and blocks a missing real driver', async () => {
     await open('send-image')
-    expect(wrapper.findAll('aside button')).toHaveLength(79)
+    expect(wrapper.findAll('aside button')).toHaveLength(78)
     expect(button('准备操作').attributes('disabled')).toBeDefined()
     expect(wrapper.text()).toContain('缺少驱动')
     expect(api.mock.calls.some(([path]) => path === '/actions/prepare')).toBe(false)
