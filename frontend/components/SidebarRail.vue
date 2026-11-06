@@ -48,18 +48,6 @@
         </div>
       </div>
 
-      <button
-        type="button"
-        class="sidebar-rail-action w-full h-[var(--sidebar-rail-step)] flex items-center justify-center cursor-pointer group"
-        title="AI 助手"
-        aria-label="AI 助手"
-        @click="goAi"
-      >
-        <span class="sidebar-rail-plate w-[var(--sidebar-rail-btn)] h-[var(--sidebar-rail-btn)] rounded-md flex items-center justify-center">
-          <i class="fa-solid fa-wand-magic-sparkles sidebar-rail-icon" :class="{ 'sidebar-rail-icon-active': isAiRoute }" aria-hidden="true"></i>
-        </span>
-      </button>
-
       <!-- Moments -->
       <div
         class="sidebar-rail-action w-full h-[var(--sidebar-rail-step)] flex items-center justify-center cursor-pointer group"
@@ -767,7 +755,6 @@ const selectAccountFromDialog = async (account) => {
 }
 
 const isChatRoute = computed(() => route.path?.startsWith('/chat'))
-const isAiRoute = computed(() => route.path === '/ai')
 const isSnsRoute = computed(() => route.path?.startsWith('/sns'))
 const isFavoritesRoute = computed(() => route.path?.startsWith('/favorites'))
 const isContactsRoute = computed(() => route.path?.startsWith('/contacts'))
@@ -778,7 +765,6 @@ const isPaymentsRoute = computed(() => route.path?.startsWith('/payments'))
 const isWrappedRoute = computed(() => route.path?.startsWith('/wrapped'))
 
 const goChat = async () => { await navigateTo('/chat') }
-const goAi = async () => { await navigateTo('/ai') }
 const goSns = async () => { await navigateTo('/sns') }
 const goFavorites = async () => { await navigateTo('/favorites') }
 const goContacts = async () => { await navigateTo('/contacts') }

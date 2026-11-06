@@ -238,8 +238,8 @@ class RemoteTests(IsolatedState, unittest.IsolatedAsyncioTestCase):
 
     async def test_missing_driver_is_blocked_without_fake_success(self):
         caps = await service.capabilities()
-        self.assertEqual(caps['counts']['total'], 79)
-        self.assertEqual(caps['counts']['available'], 31)
+        self.assertEqual(caps['counts']['total'], 78)
+        self.assertEqual(caps['counts']['available'], 30)
         self.assertEqual(caps['features']['send-text']['state'], 'available')
         self.assertEqual(caps['features']['send-image']['state'], 'blocked')
         self.assertEqual(caps['features']['contact-search']['state'], 'blocked')
@@ -262,7 +262,7 @@ class RemoteTests(IsolatedState, unittest.IsolatedAsyncioTestCase):
                                            for feature in service.DESKTOP_FEATURES if 'label' not in feature]
         self.remote.tools.return_value += [{'name': 'wechat_contact_lookup'}]
         caps = await service.capabilities()
-        self.assertEqual(caps['counts'], {'total': 79, 'available': 40})
+        self.assertEqual(caps['counts'], {'total': 78, 'available': 39})
         for feature in ('contact-search', 'sns-post', 'automation-onboarding'):
             self.assertEqual(caps['features'][feature]['state'], 'blocked')
 
@@ -270,7 +270,7 @@ class RemoteTests(IsolatedState, unittest.IsolatedAsyncioTestCase):
         self.remote.tools.return_value += [{'name': 'wechat_' + feature.replace('-', '_'), 'annotations': {'readOnlyHint': feature == 'contact-list-labels'}}
                                            for feature in service.DESKTOP_FEATURES | {'contact-list-labels'}]
         caps = await service.capabilities()
-        self.assertEqual(caps['counts'], {'total': 79, 'available': 46})
+        self.assertEqual(caps['counts'], {'total': 78, 'available': 45})
         self.assertEqual(caps['features']['automation-onboarding']['state'], 'available')
         self.assertEqual(caps['features']['automation-moments-sync']['state'], 'blocked')
         self.assertNotIn('automation-moments-follow', caps['features'])
@@ -279,7 +279,7 @@ class RemoteTests(IsolatedState, unittest.IsolatedAsyncioTestCase):
         self.remote.tools.return_value += [{'name': 'wechat_' + feature.replace('-', '_'), 'annotations': {'readOnlyHint': feature == 'contact-list-labels'}}
                                            for feature in service.DESKTOP_FEATURES | {'contact-list-labels', 'sns-autorefresh'}]
         caps = await service.capabilities()
-        self.assertEqual(caps['counts'], {'total': 79, 'available': 48})
+        self.assertEqual(caps['counts'], {'total': 78, 'available': 47})
         self.remote.call.return_value = {'status': 'completed', 'desktop': {'refresh_requested': True}}
         result = await service.refresh_moments('self')
         self.assertEqual(result['status'], 'completed')

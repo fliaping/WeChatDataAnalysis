@@ -20,13 +20,11 @@
         <form @submit.prevent="saveSettings">
           <label>WeHarbor 服务地址<input v-model="settings.origin" type="url" placeholder="https://你的 WeHarbor 域名" required /></label>
           <label>Workspace Bearer 令牌<input v-model="token" type="password" autocomplete="new-password" :placeholder="settings.token_configured ? '已配置，留空保留' : '也可通过服务端环境变量配置'" /></label>
-          <label>DeepSeek Harness 页面地址<input v-model="settings.harness_url" placeholder="/assistant/" required /></label>
           <details><summary>自定义 MCP 工具绑定</summary><label>功能代码到实际工具名的 JSON 映射<textarea v-model="bindings" rows="4" spellcheck="false" /></label><p class="muted">只有 WeHarbor 实际发布的工具才可绑定，配置不会增加缺失的微信能力。</p></details>
           <button :disabled="busy" type="submit">保存连接设置</button>
         </form>
       </details>
-      <template v-if="selected === 'ai-assistant'"><p>助手使用 DeepSeek Harness，模型、工具与对话历史由 Harness 管理。</p><NuxtLink class="action-link" to="/ai" @click="closeDialog">进入 AI 助手</NuxtLink></template>
-      <template v-else-if="selected === 'mcp-access'"><p>DeepSeek Harness 通过 MCP 读取账户、会话、联系人、群成员、消息和朋友圈，准备与提交 Action、查询回执、管理自动化任务。工具资源提供完整 Skill 用法；写操作按用户授权执行。</p><label>MCP HTTP 地址<input :value="mcpAddress" readonly @focus="$event.target.select()" /></label><p>Bearer 令牌保存在服务端数据目录 advanced/mcp.token。Harness 可使用 scripts/advanced_mcp_stdio.py 接入。配置说明：docs/advanced-features.md。</p></template>
+      <template v-if="selected === 'mcp-access'"><p>DeepSeek Harness 通过 MCP 读取账户、会话、联系人、群成员、消息和朋友圈，准备与提交 Action、查询回执、管理自动化任务。工具资源提供完整 Skill 用法；写操作按用户授权执行。</p><label>MCP HTTP 地址<input :value="mcpAddress" readonly @focus="$event.target.select()" /></label><p>Bearer 令牌保存在服务端数据目录 advanced/mcp.token。Harness 可使用 scripts/advanced_mcp_stdio.py 接入。配置说明：docs/advanced-features.md。</p></template>
       <template v-else>
         <form @submit.prevent="execute">
           <div class="grid"><label>账户目录名<input v-model="account" required /></label><label v-if="needsUsername">联系人 / 群 username<input v-model="username" required placeholder="精确微信 ID 或 xxx@chatroom" /></label></div>
@@ -99,7 +97,7 @@
 import { PRO_GROUPS, PRO_ITEMS, PRO_TOTAL } from '~/lib/pro-demos/catalog.js'
 import { useChatAccountsStore } from '~/stores/chatAccounts'
 const api = useAdvancedApi(), apiBase = useApiBase()
-const { context, closeDialog } = useAdvancedFeaturesDialog()
+const { context } = useAdvancedFeaturesDialog()
 const accountStore = useChatAccountsStore()
 const route = useRoute()
 const initialFeature = route.query.feature || context.value.feature

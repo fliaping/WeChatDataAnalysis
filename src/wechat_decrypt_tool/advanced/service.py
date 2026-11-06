@@ -10,14 +10,14 @@ from .editing import EDIT_KEYS, TYPES
 
 ONLINE = '''send-text send-at send-image send-video send-emoji send-file send-link send-voice send-pat chat-mark-read chat-set-mute send-location send-contact-card send-quote send-favorite-emoji receive-messages profile-qrcode sns-autorefresh sns-like sns-image-comment sns-text-comment sns-post sns-delete-post sns-delete-comment group-my-nick group-notice group-create group-rename group-add-members group-invite-members group-remove-members group-leave group-add-friends contact-remark contact-accept contact-delete contact-add contact-create-label contact-set-labels contact-list-labels contact-rename-label contact-delete-label contact-search contact-insights search-article search-official-account search-channel-account search-channel-video red-packet-detail'''.split()
 AUTOMATION = ['automation-broadcast', 'automation-onboarding', 'automation-moments-sync']
-FEATURES = [*EDIT_KEYS, *['add-' + k for k in TYPES], 'ai-assistant', 'mcp-access', *ONLINE, *AUTOMATION]
+FEATURES = [*EDIT_KEYS, *['add-' + k for k in TYPES], 'mcp-access', *ONLINE, *AUTOMATION]
 READS = {'receive-messages': 'chat/messages'}
 ACTION_LOCK = asyncio.Lock()
 DESKTOP_FEATURES = {'send-file', 'send-image', 'send-video', 'chat-mark-read', 'chat-set-mute',
                     'contact-remark', 'group-rename', 'group-my-nick', 'group-notice',
                     'contact-create-label', 'contact-set-labels', 'contact-rename-label', 'contact-delete-label'}
 TOOL_READS = {'contact-list-labels'}
-IMPLEMENTED = {*EDIT_KEYS, *['add-' + k for k in TYPES], 'ai-assistant', 'mcp-access',
+IMPLEMENTED = {*EDIT_KEYS, *['add-' + k for k in TYPES], 'mcp-access',
                *READS, *DESKTOP_FEATURES, *TOOL_READS, *AUTOMATION, 'send-text', 'contact-insights', 'sns-autorefresh'}
 REMOTE_STATES = {'prepared', 'scheduled', 'sent', 'completed', 'uncertain', 'failed', 'expired', 'cancelled'}
 

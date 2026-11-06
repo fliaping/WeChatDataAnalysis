@@ -1222,12 +1222,9 @@ watch([
 ], (opened) => {
   if (opened.some(Boolean)) groupMembersSidebarOpen.value = false
 })
-const openAiPage = () => navigateTo('/ai')
-
 const chatState = {
   groupMembersSidebarOpen,
   toggleGroupMembersSidebar,
-  openAiPage,
   chatAccounts,
   selectedAccount,
   availableAccounts,
